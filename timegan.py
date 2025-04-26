@@ -289,19 +289,20 @@ def timegan (ori_data, parameters):
             ', g_loss_v: ' + str(np.round(step_g_loss_v,4)) + 
             ', e_loss_t0: ' + str(np.round(np.sqrt(step_e_loss_t0),4))  )
   print('Finish Joint Training')
+
+  saver = tf.train.Saver(var_list={
+    'generator': [v for v in tf.trainable_variables() if v.name.startswith('generator')],
+    'embedder': [v for v in tf.trainable_variables() if v.name.startswith('embedder')],
+    'supervisor': [v for v in tf.trainable_variables() if v.name.startswith('supervisor')],
+    'discriminator': [v for v in tf.trainable_variables() if v.name.startswith('discriminator')],
+    'recovery': [v for v in tf.trainable_variables() if v.name.startswith('recovery')],
+  })
+
+  save_dir = 'saved_models/'
+  if not os.path.exists(save_dir):
+      os.makedirs(save_dir)
+
+  save_path = saver.save(sess, os.path.join(save_dir, "timegan_model.ckpt"))
+  print(f"✅ Model saved at: {save_path}")
     
-  ## Synthetic data generation
-  Z_mb = random_generator(no, z_dim, ori_time, max_seq_len)
-  generated_data_curr = sess.run(X_hat, feed_dict={Z: Z_mb, X: ori_data, T: ori_time})    
-    
-  generated_data = list()
-    
-  for i in range(no):
-    temp = generated_data_curr[i,:ori_time[i],:]
-    generated_data.append(temp)
-        
-  # Renormalization
-  generated_data = generated_data * max_val
-  generated_data = generated_data + min_val
-    
-  return generated_data
+  return
